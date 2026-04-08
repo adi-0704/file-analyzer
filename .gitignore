@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel
+.env
+*.local
+sample_orders.csv
+large_sample_orders.csv
+generate_sample.js
+package-lock.json
