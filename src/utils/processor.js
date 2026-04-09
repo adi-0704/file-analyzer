@@ -101,6 +101,7 @@ export const analyzeOrders = (rawOrders) => {
     const reasons = [];
 
     // ===== RED FLAG CHECKS =====
+    const isPrepaid = order['Financial Status'] === 'paid';
     const isMissingPhone = !phone;
     const isInvalidPhone = phone && !isValidIndianPhone(phone);
     const isMissingZip = !zip;
@@ -113,7 +114,8 @@ export const analyzeOrders = (rawOrders) => {
     if (isMissingZip) reasons.push('Missing Pin Code');
     if (isInvalidZip) reasons.push('Invalid Pin Code');
     if (isBadAddress) reasons.push('Improper Address');
-    if (isInvalidCity) reasons.push('Invalid City');
+    // Invalid city is Red only for COD; for Prepaid it goes to Orange
+    if (isInvalidCity && !isPrepaid) reasons.push('Invalid City');
 
     if (reasons.length > 0) {
       return { ...order, flag: 'red', flagReason: reasons.join(', '), _cleanZip: zip, _cleanPhone: phone };
@@ -121,6 +123,11 @@ export const analyzeOrders = (rawOrders) => {
 
     // ===== ORANGE FLAG CHECKS =====
     const orangeReasons = [];
+
+    // Prepaid + Invalid City → Orange (can call & fix)
+    if (isInvalidCity && isPrepaid) {
+      orangeReasons.push('Invalid City - Call Customer');
+    }
 
     // Bulk quantity > 10
     if (quantity > 10) {
