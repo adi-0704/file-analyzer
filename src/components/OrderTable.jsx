@@ -1,10 +1,16 @@
 import React from 'react';
-import { Download, Info } from 'lucide-react';
+import { Download } from 'lucide-react';
 import Papa from 'papaparse';
 
 export const OrderTable = ({ orders, title, flagType }) => {
   const exportCSV = () => {
-    const csv = Papa.unparse(orders);
+    // Export original columns (without internal flags)
+    const exportData = orders.map(({ flag, flagReason, _lineItems, _cleanZip, _cleanPhone, ...rest }) => ({
+      ...rest,
+      'Flag': flag.toUpperCase(),
+      'Flag Reason': flagReason,
+    }));
+    const csv = Papa.unparse(exportData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -19,7 +25,7 @@ export const OrderTable = ({ orders, title, flagType }) => {
   if (orders.length === 0) {
     return (
       <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-        No {flagType} flags found in this dataset.
+        No {flagType} flag orders found.
       </div>
     );
   }
@@ -39,22 +45,44 @@ export const OrderTable = ({ orders, title, flagType }) => {
               <th>Order</th>
               <th>Customer</th>
               <th>Phone</th>
+              <th>City</th>
               <th>Pin Code</th>
-              <th>Quantity</th>
-              <th>Flag Reason</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Flag</th>
             </tr>
           </thead>
           <tbody>
             {orders.map((order, idx) => (
               <tr key={idx}>
-                <td>{order.Name}</td>
+                <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{order.Name}</td>
                 <td>
-                  <div style={{ fontWeight: 600 }}>{order.Email}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order['Shipping Address1']?.substring(0, 30)}...</div>
+                  <div style={{ fontWeight: 600 }}>{order['Shipping Name'] || order['Billing Name'] || '—'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {order['Shipping Address1']?.substring(0, 40) || '—'}
+                  </div>
                 </td>
-                <td>{order['Shipping Phone'] || <span style={{ color: 'var(--red-flag)' }}>Missing</span>}</td>
-                <td>{order['Shipping Zip'] || <span style={{ color: 'var(--red-flag)' }}>Missing</span>}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  {order._cleanPhone || <span style={{ color: 'var(--red-flag)', fontWeight: 600 }}>Missing</span>}
+                </td>
+                <td>{order['Shipping City'] || '—'}</td>
+                <td>
+                  {order._cleanZip || <span style={{ color: 'var(--red-flag)', fontWeight: 600 }}>Missing</span>}
+                </td>
                 <td>{order['Lineitem quantity']}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>₹{order['Total']}</td>
+                <td>
+                  <span style={{
+                    fontSize: '0.7rem',
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: '4px',
+                    background: order['Financial Status'] === 'paid' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                    color: order['Financial Status'] === 'paid' ? '#a7f3d0' : '#fde68a',
+                  }}>
+                    {order['Financial Status'] === 'paid' ? 'Prepaid' : 'COD'}
+                  </span>
+                </td>
                 <td>
                   <span className={`flag-badge flag-${order.flag}`}>
                     {order.flagReason}
