@@ -31,6 +31,17 @@ const isValidPinCode = (zip) => {
   return /^\d{6}$/.test(cleaned);
 };
 
+// Placeholder / fake city values that should be flagged
+const FAKE_CITY_VALUES = [
+  'select city', 'select', 'city', 'na', 'n/a', 'none', 'nil', 'test',
+  '-', '.', '..', '...', 'x', 'xx', 'xxx', 'abc', 'asdf', 'other',
+];
+
+const isFakeCity = (city) => {
+  if (!city || city.trim().length < 2) return true;
+  return FAKE_CITY_VALUES.includes(city.trim().toLowerCase());
+};
+
 // Check if address is proper (not too short, not gibberish)
 const isProperAddress = (addr1, addr2, city) => {
   const combined = [addr1, addr2, city].filter(Boolean).join(' ').trim();
@@ -95,12 +106,14 @@ export const analyzeOrders = (rawOrders) => {
     const isMissingZip = !zip;
     const isInvalidZip = zip && !isValidPinCode(zip);
     const isBadAddress = !isProperAddress(addr1, addr2, city);
+    const isInvalidCity = isFakeCity(city);
 
     if (isMissingPhone) reasons.push('Missing Phone');
     if (isInvalidPhone) reasons.push('Invalid Phone');
     if (isMissingZip) reasons.push('Missing Pin Code');
     if (isInvalidZip) reasons.push('Invalid Pin Code');
     if (isBadAddress) reasons.push('Improper Address');
+    if (isInvalidCity) reasons.push('Invalid City');
 
     if (reasons.length > 0) {
       return { ...order, flag: 'red', flagReason: reasons.join(', '), _cleanZip: zip, _cleanPhone: phone };
