@@ -122,7 +122,11 @@ export const analyzeOrders = (rawOrders) => {
         return diffDays <= 7;
       });
       if (recentOrders.length > 0) {
-        orangeReasons.push(`${recentOrders.length + 1} orders in 7 days`);
+        const totalOrders = recentOrders.length + 1;
+        const maxGapDays = Math.max(...recentOrders.map(e => Math.abs(date - e.date) / (1000 * 60 * 60 * 24)));
+        const gapRounded = Math.round(maxGapDays);
+        const gapLabel = gapRounded === 0 ? 'same day' : gapRounded === 1 ? '1 day' : `${gapRounded} days`;
+        orangeReasons.push(`${totalOrders} orders ${gapLabel}`);
       }
     }
 
