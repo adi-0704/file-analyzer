@@ -5,10 +5,11 @@ import Papa from 'papaparse';
 export const OrderTable = ({ orders, title, flagType }) => {
   const exportCSV = () => {
     // Export original columns (without internal flags)
-    const exportData = orders.map(({ flag, flagReason, _lineItems, _cleanZip, _cleanPhone, ...rest }) => ({
+    const exportData = orders.map(({ flag, flagReason, remark, _lineItems, _cleanZip, _cleanPhone, ...rest }) => ({
       ...rest,
       'Flag': flag.toUpperCase(),
       'Flag Reason': flagReason,
+      'Action Required': remark || (flag === 'green' ? 'Ready — No action needed' : 'Review required'),
     }));
     const csv = Papa.unparse(exportData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -51,6 +52,7 @@ export const OrderTable = ({ orders, title, flagType }) => {
               <th>Total</th>
               <th>Payment</th>
               <th>Flag</th>
+              <th>Remark</th>
             </tr>
           </thead>
           <tbody>
@@ -87,6 +89,9 @@ export const OrderTable = ({ orders, title, flagType }) => {
                   <span className={`flag-badge flag-${order.flag}`}>
                     {order.flagReason}
                   </span>
+                </td>
+                <td style={{ fontSize: '0.8rem', maxWidth: '250px', color: order.flag === 'orange' ? '#fde68a' : order.flag === 'red' ? '#fca5a5' : '#a7f3d0' }}>
+                  {order.remark || (order.flag === 'green' ? '✅ Ready — No action needed' : '❌ Do not dispatch')}
                 </td>
               </tr>
             ))}

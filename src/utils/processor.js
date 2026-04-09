@@ -123,15 +123,18 @@ export const analyzeOrders = (rawOrders) => {
 
     // ===== ORANGE FLAG CHECKS =====
     const orangeReasons = [];
+    const remarks = [];
 
     // Prepaid + Invalid City → Orange (can call & fix)
     if (isInvalidCity && isPrepaid) {
-      orangeReasons.push('Invalid City - Call Customer');
+      orangeReasons.push('Invalid City');
+      remarks.push('📞 Call customer to confirm correct city before dispatch');
     }
 
     // Bulk quantity > 10
     if (quantity > 10) {
       orangeReasons.push(`Bulk Qty (${quantity})`);
+      remarks.push('⚠️ Verify bulk order — confirm with customer if genuine');
     }
 
     // Multiple orders within 7 days from same customer
@@ -147,11 +150,12 @@ export const analyzeOrders = (rawOrders) => {
         const gapRounded = Math.round(maxGapDays);
         const gapLabel = gapRounded === 0 ? 'same day' : gapRounded === 1 ? '1 day' : `${gapRounded} days`;
         orangeReasons.push(`${totalOrders} orders ${gapLabel}`);
+        remarks.push(`🔄 Repeat customer — call to confirm order is not duplicate`);
       }
     }
 
     if (orangeReasons.length > 0) {
-      return { ...order, flag: 'orange', flagReason: orangeReasons.join(', '), _cleanZip: zip, _cleanPhone: phone };
+      return { ...order, flag: 'orange', flagReason: orangeReasons.join(', '), remark: remarks.join(' | '), _cleanZip: zip, _cleanPhone: phone };
     }
 
     // ===== GREEN FLAG =====
