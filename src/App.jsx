@@ -30,6 +30,8 @@ function App() {
       order['Shipping City']?.toLowerCase().includes(term);
 
     if (activeTab === 'all') return matchesSearch;
+    if (activeTab === 'cod') return order['Financial Status'] !== 'paid' && matchesSearch;
+    if (activeTab === 'prepaid') return order['Financial Status'] === 'paid' && matchesSearch;
     return order.flag === activeTab && matchesSearch;
   }) : [];
 
@@ -116,6 +118,9 @@ function App() {
             <div className={`tab ${activeTab === 'green' ? 'active' : ''}`} onClick={() => setActiveTab('green')}>🟢 Green ({stats.green})</div>
             <div className={`tab ${activeTab === 'orange' ? 'active' : ''}`} onClick={() => setActiveTab('orange')}>🟠 Orange ({stats.orange})</div>
             <div className={`tab ${activeTab === 'red' ? 'active' : ''}`} onClick={() => setActiveTab('red')}>🔴 Red ({stats.red})</div>
+            <div style={{ width: '1px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
+            <div className={`tab ${activeTab === 'cod' ? 'active' : ''}`} onClick={() => setActiveTab('cod')}>💰 COD ({stats.cod})</div>
+            <div className={`tab ${activeTab === 'prepaid' ? 'active' : ''}`} onClick={() => setActiveTab('prepaid')}>💳 Prepaid ({stats.prepaid})</div>
 
             <button
               onClick={() => { setData(null); setSearchTerm(''); setActiveTab('all'); }}
@@ -127,7 +132,12 @@ function App() {
 
           <OrderTable
             orders={filteredData}
-            title={activeTab === 'all' ? 'All Processed Orders' : `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Flag Orders`}
+            title={
+              activeTab === 'all' ? 'All Processed Orders' :
+              activeTab === 'cod' ? 'COD Orders' :
+              activeTab === 'prepaid' ? 'Prepaid Orders' :
+              `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Flag Orders`
+            }
             flagType={activeTab}
           />
         </>
